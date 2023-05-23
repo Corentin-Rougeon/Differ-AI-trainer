@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/main.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&family=Roboto:wght@100;400&display=swap" rel="stylesheet">
+    <title>Differ AI trainer</title>
+    <script src="https://cdn.socket.io/4.3.1/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        var socket = io();
+
+        var project_has_img = false
+        var project_has_model = false
+        var project_loaded = false
+        var current_project = ""
+
+        function create_project(){
+            Pname = document.getElementById("project_name").value
+            socket.emit("create_project",Pname)
+        }
+
+
+
+        function scrape(){
+            class1 = document.getElementById("class-1").value
+            class2 = document.getElementById("class-2").value
+            n = document.getElementById("image-amount").value
+
+            if(class1 !== null && class2 !== null){
+                socket.emit("scrape",{'current_project':current_project,'class1':class1,'class2':class2,'n':n})
+            }
+
+
+        }
+
+        function test_model(){
+            img_url = document.getElementById("img_url").value
+
+            if(img_url !== ""){
+                socket.emit("test_model", {'current_project':current_project,'img_url':img_url})
+            }
+        }
+
+        function train_model(){
+            epoch = document.getElementById("train-epoch").value
+            if(epoch != null) {
+                socket.emit("train_model", {'current_project': current_project, 'epoch': epoch})
+            }
+            console.log("train")
+        }
+
+
+        $(document).ready(function() {
+            document.getElementById("model_manager").style.display = "none"
+            document.getElementById("image_manager").style.display = "none"
+            document.getElementById("project_info").style.display = "none"
+            document.getElementById("model_tester").style.display = "none"
+
+            function get_project(){
+                Pname = document.getElementById("data").value
+                console.log("test")
+                if(Pname !== "def"){
+                    socket.emit("get_project",Pname)
+                    document.getElementById("image_manager").style.display = "flex"
+                    current_project = Pname
+                } else{
+                    project_has_img = false
+                    project_has_model = false
+                    project_loaded = false
+                    current_project = ""
+
+                    document.getElementById("model_manager").style.display = "none"
+                    document.getElementById("image_manager").style.display = "none"
+                    document.getElementById("project_info").style.display = "none"
+                    document.getElementById("model_tester").style.display = "none"
+                    document.getElementById("class-1").disabled = false
+                    document.getElementById("class-2").disabled = false
+                    document.getElementById("class-1").value = ""
+                    document.getElementById("class-2").value = ""
+                }
+            }
+
+            const dropdown = document.getElementById('data');
+            dropdown.addEventListener('change', get_project);
+
+
+            socket.emit("loaded")
+
+
+
+
+            socket.on("update_project_list", function(data) {
+                console.log(data)
+                var select = document.getElementById("data")
+
+                select.innerHTML = '<option value="def" selected>select a project</option>';
+
+                for (const d of data) {
+                    console.log(d)
+
+                    opt = document.createElement("option");
+
+                    opt.value = d;
+                    opt.textContent = d;
+                    select.appendChild(opt);
+                }
+            })
+
+            socket.on("update_queue", function(data){
+                console.log(data)
+                queue = document.getElementById("queue")
+                queue.innerHTML = ""
+
+                for(const process of data){
+                    func = process["func"]
+
+                    child = document.createElement("div");
+                    child.className = "process";
+                    if(func === "train") {
+                        child.innerText = `${process["current_project"]} - model training - epoch: ${process["epoch"]}`
+                    } else if (func === "scrape"){
+                        child.innerText = `${process["current_project"]} - scraping images - ${process["n"]} images`
+                    } else if (func === "test"){
+                        child.innerText = `${process["current_project"]} - testing model`
+                    }
+                    queue.appendChild(child)
+
+                }
+            })
+
+            socket.on("get_last_test",function(data){
+                if(data !== "no_test") {
+                    document.getElementById("test-results").style.display = "unset"
+                    console.log(data)
+
+                    img = document.getElementById("test-img")
+                    img.src = data["img_url"]
+
+                    results = document.getElementById("test-class")
+                    results.innerText = data["predicted_class"]
+
+                    field = document.getElementById("img_url")
+                    field.value = data["img_url"]
+
+                } else{
+                    document.getElementById("test-results").style.display = "none"
+                }
+            })
+
+
+            socket.on("get_project_meta", function(data){
+                if(current_project === data["name"]) {
+                    console.log(data)
+
+                    project_has_img = data["has_img"]
+                    project_has_model = data["has_model"]
+
+
+                    info = document.getElementById("info")
+                    info.innerHTML = ""
+                    let child = document.createElement("div");
+                    child.className = "info"
+
+
+
+                    if (project_has_img) {
+                        child = document.createElement("div");
+                        child.innerText = `image count : ${data["img_count"]}`
+                        child.className = "info"
+                        info.appendChild(child)
+                        child = document.createElement("div");
+                        child.className = "info"
+                        child.innerText = `classes : '${data["classes"][0]}' and '${data["classes"][1]}'`
+                        info.appendChild(child)
+                        document.getElementById("model_manager").style.display = "flex"
+                        document.getElementById("class-1").disabled = true
+                        document.getElementById("class-2").disabled = true
+                        document.getElementById("image-amount").disabled = true
+                        document.getElementById("scrape").disabled = true
+                        document.getElementById("class-1").value = data["classes"][0]
+                        document.getElementById("class-2").value = data["classes"][1]
+                    } else {
+                        document.getElementById("model_manager").style.display = "none"
+                        document.getElementById("class-1").disabled = false
+                        document.getElementById("class-2").disabled = false
+                        document.getElementById("image-amount").disabled = false
+                        document.getElementById("scrape").disabled = false
+                        document.getElementById("class-1").value = ""
+                        document.getElementById("class-2").value = ""
+                    }
+
+
+                    if(project_has_model){
+                        document.getElementById("model_tester").style.display = "flex"
+                        child = document.createElement("div");
+                        child.innerText = `model accuray : ${Math.round(data["accuracy"]*100,2)}%`
+                        child.className = "info"
+                        info.appendChild(child)
+                    } else{
+                        document.getElementById("model_tester").style.display = "none"
+                    }
+
+
+                    if(!project_has_model && !project_has_img){
+                        document.getElementById("project_info").style.display = "none"
+                    } else{
+                        document.getElementById("project_info").style.display = "flex"
+                    }
+                }
+
+            })
+
+
+
+
+        });
+    </script>
+</head>
+<body>
+    <h1>Differ AI trainer</h1>
+
+    <div class="menu">
+        <div class="project_manager">
+            <input type="text" id="project_name" placeholder="new project name">
+            <button onclick="create_project()">create a new project</button>
+
+            <select id="data" name="data" >
+                <option value="def" selected>select a project</option>
+            </select>
+        </div>
+
+            <div class="project_dashboard">
+                <div class="project_info" id="project_info">
+                    <div class="title">project info :</div>
+                    <div class="info" id="info"></div>
+                </div>
+
+                <div class="image_database" id="image_manager">
+                    <div class="title">image data manager :</div>
+                    <div class="content">
+                        <input type="text" id="class-1" class="img_class" placeholder="class1 query">
+                        <input type="text" id="class-2" class="img_class" placeholder="class2 query">
+
+                        <input type="number" step="1" min="1" max="1000" id="image-amount" class="scrape_value" placeholder="scrape amount">
+
+                        <button id="scrape" class="scrape_button" onclick="scrape()">scrape</button>
+                    </div>
+                </div>
+
+
+                <div class="model_manager" id="model_manager">
+                    <div class="title">model manager :</div>
+                    <div class="content">
+                        <input id="train-epoch" placeholder="number of epoch" type="number" step="1" min="2" max="50">
+                        <button id="train-model" onclick="train_model()">train</button>
+                        <button id="reset-model">reset</button>
+                    </div>
+                </div>
+
+
+                <div class="model_tester" id="model_tester">
+                    <div class="title">model tester :</div>
+                    <div class="content">
+                        <input id="img_url" placeholder="img url" type="text">
+                        <button onclick="test_model()">test</button>
+                    </div>
+
+                    <div class="test-results" id="test-results">
+                        <div class="title">results :</div>
+                        <img id="test-img" scr="">
+                        <div class="class_title">predicted class :</div>
+                        <div id="test-class"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="process_queue">
+                <div class="title">process queue :</div>
+                <div class="queue" id="queue"></div>
+            </div>
+
+
+
+
+
+    </div>
+
+
+
+</body>
+</html>

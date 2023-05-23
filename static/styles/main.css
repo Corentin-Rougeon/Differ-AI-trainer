@@ -1,0 +1,152 @@
+html{
+    background: black;
+    color:white;
+    font-family: 'Poppins', sans-serif;
+    font-family: 'Roboto', sans-serif;
+}
+
+h1{
+    margin: auto;
+    text-decoration: underline;
+    width: fit-content;
+    margin-bottom: 1em;
+}
+
+.menu{
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    width: 600px;
+    margin: auto;
+    border: white 2px solid;
+    border-radius: 10px;
+}
+
+button{
+    background: #383838;
+    border: none;
+    border-bottom: white 2px solid;
+    color:white;
+    border-radius: 5px;
+}
+
+button:disabled{
+    color: #c4857e;
+    background: black;
+}
+
+button:disabled:hover{
+    color: #c4857e;
+    background: black;
+}
+
+
+button:hover{
+    background: #858585;
+}
+
+input{
+
+    background: none;
+    border:none;
+    border-radius: 5px;
+    color:white;
+    border-bottom: white 2px solid;
+    margin-bottom: 0.5em;
+}
+
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+input:disabled{
+    color: #c4857e;
+}
+
+select{
+    background: black;
+    color:white;
+    border: none;
+    border-bottom: 2px white solid;
+    border-radius: 5px;
+}
+
+.title{
+    width: 100%;
+    margin-bottom: 1em;
+
+}
+
+.content{
+
+}
+
+.project_manager{
+    padding: 1em;
+}
+
+.image_database{
+    padding:1em;
+    display: flex;
+    flex-direction: column;
+    border-top:white 2px solid
+}
+
+.img_class{
+    width: 50%;
+    margin-right: 50%;
+}
+
+.scrape_value{
+    width: 40%;
+    margin-right: -4px;
+}
+
+.scrape_button{
+    width: 10%;
+}
+
+.process_queue{
+    padding: 1em;
+    border-top: 2px white solid;
+}
+
+.process{
+    background: #4b4b4b;
+    width: fit-content;
+    padding: 2px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.model_manager{
+    padding:1em;
+    display: flex;
+    flex-direction: column;
+    border-top:white 2px solid
+}
+
+#train-epoch{
+    width: 40%;
+}
+
+.project_info{
+    padding: 1em;
+    border-top: white 2px solid;
+    flex-direction: column;
+}
+
+
+.model_tester{
+    padding: 1em;
+    border-top: white 2px solid;
+    flex-direction: column;
+}
+
+#img_url{
+    width: 90%;
+}
+
+#test-img{
+    height: 100px;
+}
