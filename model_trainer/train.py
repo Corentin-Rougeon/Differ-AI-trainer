@@ -25,25 +25,17 @@ from numba import cuda
 
 
 def train(dirpath="",epoch=2):
-    import os
     import time
-    from shutil import move
-
-    import keras as K
     from keras.models import Model, load_model
     from keras.optimizers import Adam
     from keras.applications.vgg16 import VGG16, preprocess_input
     from keras.preprocessing.image import ImageDataGenerator
-    from keras.callbacks import ModelCheckpoint, EarlyStopping
     from keras.layers import Dense, Dropout, Flatten
-    from pathlib import Path
     import tensorflow as tf
-    import numpy as np
     from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
     import os
     import json
     from keras import backend as K
-    from numba import cuda
 
     os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
 
