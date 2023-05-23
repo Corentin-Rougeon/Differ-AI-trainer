@@ -66,8 +66,13 @@ def train(dirpath="",epoch=2):
 
     test_generator = ImageDataGenerator(preprocessing_function=preprocess_input)
 
+    class_subset = []
 
-    class_subset = sorted(os.listdir(f"{dirpath}/img/validation"))[:2]
+    with open(f"{dirpath}/meta.json", "r") as f:
+        data = json.loads(f.read())
+        class_subset = data["classes"]
+
+
     class_subset1 = sorted(os.listdir(f"{dirpath}/img/train"))[:2]
 
 
@@ -231,7 +236,7 @@ def train(dirpath="",epoch=2):
             yield estimated_remaining_time, train_acc
 
     class SaveBestModelCallback(tf.keras.callbacks.Callback):
-        def __init__(self, save_path, monitor='val_loss'):
+        def __init__(self, save_path, monitor='loss'):
             super(SaveBestModelCallback, self).__init__()
             self.save_path = save_path
             self.monitor = monitor
@@ -268,7 +273,7 @@ def train(dirpath="",epoch=2):
     # ModelCheckpoint callback - save best weights
     tl_checkpoint_1 = ModelCheckpoint(filepath=f'{dirpath}/tl_model_v1.weights.best.h5',
                                       save_best_only=True,
-                                      monitor = 'val_loss',
+                                      monitor = 'loss',
                                       verbose=1,
                                       compress=False,
                                       save_freq='epoch',
@@ -277,7 +282,7 @@ def train(dirpath="",epoch=2):
     save_best_model_callback = SaveBestModelCallback(save_path=f'{dirpath}/tl_model_v1.weights.best.h5', monitor='val_loss')
 
     # EarlyStopping
-    early_stop = EarlyStopping(monitor='val_loss',
+    early_stop = EarlyStopping(monitor='loss',
                                patience=10,
                                restore_best_weights=True,
                                mode='min')
